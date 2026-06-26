@@ -1,0 +1,149 @@
+{
+  "_meta": {
+    "source": "job_description.md - Senior AI Engineer, Founding Team @ Redrob AI",
+    "extraction_method": "manual analysis (static, one-time, no LLM call needed at runtime or build-time)",
+    "note": "This file is the structured decomposition of the JD. It is hardcoded and checked into the repo so that runtime never needs network access or an LLM call to re-derive it. See precompute/jd_requirements.py for an optional Gemini-based regeneration path if the JD ever changes."
+  },
+
+  "role_title": "Senior AI Engineer — Founding Team",
+  "company": "Redrob AI",
+
+  "experience_range": {
+    "min_years": 5,
+    "max_years": 9,
+    "ideal_min_years": 6,
+    "ideal_max_years": 8,
+    "note": "A soft band, not a hard cutoff. Strong candidates slightly outside this range should still be considered if other signals are strong."
+  },
+
+  "ideal_applied_ai_years": {
+    "min": 4,
+    "max": 5,
+    "note": "Of total experience, ideally 4-5 years specifically in applied ML/AI roles at PRODUCT companies, not pure services/consulting."
+  },
+
+  "hard_requirements": [
+    {
+      "id": "embeddings_retrieval_production",
+      "description": "Production experience with embeddings-based retrieval systems (sentence-transformers, OpenAI embeddings, BGE, E5, or similar) deployed to real users. Specific model doesn't matter; operational experience with embedding drift, index refresh, retrieval-quality regression does.",
+      "keywords": ["embeddings", "sentence-transformers", "bge", "e5", "openai embeddings", "embedding drift", "index refresh", "retrieval"]
+    },
+    {
+      "id": "vector_db_hybrid_search_production",
+      "description": "Production experience with vector databases or hybrid search infra (Pinecone, Weaviate, Qdrant, Milvus, OpenSearch, Elasticsearch, FAISS, or similar). Specific tech doesn't matter; operational experience does.",
+      "keywords": ["pinecone", "weaviate", "qdrant", "milvus", "opensearch", "elasticsearch", "faiss", "vector database", "hybrid search", "bm25"]
+    },
+    {
+      "id": "strong_python",
+      "description": "Strong Python, code quality matters.",
+      "keywords": ["python"]
+    },
+    {
+      "id": "ranking_evaluation_frameworks",
+      "description": "Hands-on experience designing evaluation frameworks for ranking systems - NDCG, MRR, MAP, offline-to-online correlation, A/B test interpretation.",
+      "keywords": ["ndcg", "mrr", "map", "a/b test", "offline evaluation", "online evaluation", "ranking evaluation"]
+    }
+  ],
+
+  "nice_to_have": [
+    {"id": "llm_finetuning", "keywords": ["lora", "qlora", "peft", "fine-tuning", "fine-tune"]},
+    {"id": "learning_to_rank", "keywords": ["learning to rank", "ltr", "xgboost ranking", "neural ranking"]},
+    {"id": "hr_tech_background", "keywords": ["hr-tech", "recruiting tech", "marketplace", "talent platform"]},
+    {"id": "distributed_systems", "keywords": ["distributed systems", "large-scale inference", "inference optimization"]},
+    {"id": "open_source", "keywords": ["open source", "open-source", "github contributions"]}
+  ],
+
+  "disqualifiers": {
+    "pure_research_no_production": {
+      "description": "Career spent entirely in pure research environments (academic labs, research-only roles) without ANY production deployment.",
+      "severity": "hard",
+      "detection_hint": "Check career_history for academic/research-lab employers + absence of 'deployed', 'production', 'shipped', 'served', 'users' language in descriptions."
+    },
+    "recent_llm_only_no_pre_llm_ml": {
+      "description": "AI experience consists primarily of recent (<12 months) LangChain+OpenAI projects, with no substantial pre-LLM-era ML production experience.",
+      "severity": "hard",
+      "detection_hint": "Total years_of_experience is high but ML/AI-relevant career history is short (<12mo) AND skills are dominated by LangChain/OpenAI wrapper tools rather than fundamentals (embeddings, ranking, retrieval, classical ML)."
+    },
+    "no_recent_production_code": {
+      "description": "Senior engineer who hasn't written production code in 18+ months due to moving into pure 'architecture'/'tech lead' roles. This role writes code.",
+      "severity": "hard",
+      "detection_hint": "Most recent job title contains 'Architect', 'Tech Lead', 'Engineering Manager', 'Director' etc. AND duration_months of that role >= 18 AND description lacks hands-on coding language."
+    },
+    "title_chaser_job_hopper": {
+      "description": "Career trajectory shows optimizing for Senior->Staff->Principal titles by switching companies every ~1.5 years (18 months). They need someone planning to stay 3+ years.",
+      "severity": "soft",
+      "detection_hint": "avg_tenure_months across career_history < 18, especially combined with consistently escalating seniority words in titles."
+    },
+    "framework_enthusiast_demo_builder": {
+      "description": "GitHub full of framework tutorials, blog posts are 'How I built X with [hot framework]' - i.e. demo-builder, not systems thinker.",
+      "severity": "soft",
+      "detection_hint": "Hard to detect from structured fields alone; weak signal from skills being framework-name-heavy (LangChain, AutoGPT, CrewAI) without any production/scale/systems language in career descriptions."
+    },
+    "consulting_only_career": {
+      "description": "Entire career spent at consulting/services firms (TCS, Infosys, Wipro, Accenture, Cognizant, Capgemini, etc). Currently AT one of these is fine IF prior product-company experience exists.",
+      "severity": "soft",
+      "consulting_companies": ["tcs", "tata consultancy", "infosys", "wipro", "accenture", "cognizant", "capgemini", "hcl", "tech mahindra", "mindtree", "mphasis", "ltimindtree", "l&t infotech"],
+      "detection_hint": "ALL companies in career_history match the consulting list -> hard flag. If only the CURRENT company matches but prior companies don't -> not a disqualifier."
+    },
+    "cv_speech_robotics_without_nlp": {
+      "description": "Primary expertise is computer vision, speech, or robotics WITHOUT significant NLP/IR exposure. Respected work, but wrong fundamentals for this role.",
+      "severity": "soft",
+      "cv_speech_robotics_keywords": ["computer vision", "image classification", "object detection", "speech recognition", "tts", "text-to-speech", "robotics", "slam", "autonomous", "gans", "segmentation"],
+      "nlp_ir_keywords": ["nlp", "natural language", "information retrieval", "embeddings", "retrieval", "ranking", "search", "llm", "transformer", "bert"],
+      "detection_hint": "Heavy presence of CV/Speech/Robotics keywords AND near-absence of NLP/IR keywords across skills + career descriptions."
+    },
+    "closed_source_only_no_external_validation": {
+      "description": "5+ years entirely on closed-source proprietary systems with no external validation (no papers, talks, open-source contributions).",
+      "severity": "soft",
+      "detection_hint": "years_of_experience >= 5 AND github_activity_score == -1 (no GitHub linked) AND no certifications/languages suggesting external engagement. This is a WEAK proxy signal since the schema doesn't have a direct 'papers/talks' field - github_activity_score is the best available proxy."
+    }
+  },
+
+  "location": {
+    "preferred_cities": ["pune", "noida"],
+    "acceptable_cities": ["hyderabad", "mumbai", "delhi", "delhi ncr", "gurgaon", "gurugram", "new delhi"],
+    "country_required": "India",
+    "outside_india": "case-by-case, no visa sponsorship - treat as a soft negative unless willing_to_relocate=true",
+    "work_mode": "Hybrid (Noida/Pune offices, Pune mostly Tue/Thu), quarterly travel for offsites expected",
+    "remote_only_preference_penalty": "soft negative - role expects in-person presence, not fully remote"
+  },
+
+  "notice_period": {
+    "ideal_max_days": 30,
+    "buyout_possible_up_to_days": 30,
+    "still_in_scope_but_higher_bar_above_days": 30,
+    "note": "No candidates in the sample had <30 days, so this MUST be a soft scoring penalty that scales with days, not a hard filter."
+  },
+
+  "behavioral_emphasis": {
+    "note": "JD explicitly instructs: a perfect-on-paper candidate who hasn't logged in for 6 months and has a 5% recruiter response rate is NOT actually available for hiring purposes. Down-weight such candidates appropriately. This directly maps to using redrob_signals as a MULTIPLIER on top of skill-match score, not a separate additive component.",
+    "must_be_reachable": true,
+    "key_signals": ["last_active_date", "open_to_work_flag", "recruiter_response_rate", "avg_response_time_hours", "interview_completion_rate"]
+  },
+
+  "explicit_trap_warning": {
+    "keyword_stuffing_trap": "A candidate with all the AI keywords listed as skills but whose title/career is e.g. 'Marketing Manager' is NOT a fit, regardless of how complete their skill list looks.",
+    "plain_language_tier5_trap": "A candidate may never use words like 'RAG' or 'Pinecone' but if career history shows they built a recommendation system at a product company, they ARE a fit. Semantic understanding of career_history.description must catch this, not keyword matching.",
+    "design_implication": "current_title and skills[].name are SECONDARY, weaker signals. profile.summary and career_history[].description (deduplicated) are PRIMARY signals for semantic fit."
+  },
+
+  "ideal_candidate_summary": {
+    "total_experience_years": "6-8",
+    "applied_ai_years": "4-5",
+    "company_type": "product companies, not pure services",
+    "has_shipped": "at least one end-to-end ranking/search/recommendation system to real users at meaningful scale",
+    "has_opinions_on": ["hybrid vs dense retrieval", "offline vs online evaluation", "when to fine-tune vs prompt"],
+    "location_fit": "in or willing to relocate to Noida/Pune",
+    "reachability": "active on platform or clear signal of being in job market"
+  },
+
+  "scoring_weight_hints": {
+    "note": "Suggested relative emphasis for Phase 2 composite scoring, derived from how much weight the JD itself places on each dimension. Final weights tuned in ranker/scoring.py.",
+    "semantic_career_fit": "highest priority - this is what 50% of NDCG@10 will reward if done well",
+    "production_experience": "very high - explicitly called out twice in JD as a hard requirement",
+    "evaluation_framework_experience": "high - explicitly named as a hard requirement, fairly rare signal",
+    "career_trajectory_stability": "medium-high - explicit disqualifier for job-hoppers and title-chasers",
+    "behavioral_reachability": "high - JD explicitly instructs to down-weight unreachable candidates",
+    "logistics_fit": "medium - location/notice period matter but JD says 'flexible' and 'case-by-case' repeatedly, so should not dominate"
+  }
+}
