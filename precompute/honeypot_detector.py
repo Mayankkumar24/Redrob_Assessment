@@ -342,18 +342,6 @@ def _check_all_reachability_perfect(redrob_signals: dict) -> list[str]:
     return []
 
 
-def _check_experience_vs_career_history(profile: dict, career_history: list[dict]) -> list[str]:
-    """years_of_experience should be roughly >= the span implied by career
-    history (allowing gaps, so we only flag a LARGE mismatch, not a small one)."""
-    yoe = profile.get("years_of_experience")
-    total_months = sum(j.get("duration_months", 0) or 0 for j in career_history)
-    total_years = total_months / 12
-    if yoe is not None and total_years > yoe + 2:  # 2yr tolerance for overlap/rounding
-        return [f"career_history implies ~{total_years:.1f}yrs but "
-                f"years_of_experience claims only {yoe}"]
-    return []
-
-
 # ---------------------------------------------------------------------------
 # NEW HARD checks (5 additional impossible-profile patterns)
 # ---------------------------------------------------------------------------
@@ -508,8 +496,6 @@ HARD_CHECKS = [
     ("education_date_impossible",     lambda r: _check_education_date_impossible(r.get("education", []))),
     ("career_date_math",              lambda r: _check_career_date_math(r.get("career_history", []))),
     ("all_reachability_perfect",      lambda r: _check_all_reachability_perfect(r.get("redrob_signals", {}))),
-    ("experience_mismatch",           lambda r: _check_experience_vs_career_history(
-                                          r.get("profile", {}), r.get("career_history", []))),
     # --- 5 new checks below ---
     # ("skill_duration_exceeds_yoe",    lambda r: _check_skill_duration_exceeds_total_experience(
     #                                       r.get("profile", {}), r.get("skills", []))),
@@ -524,6 +510,95 @@ HARD_CHECKS = [
 # ---------------------------------------------------------------------------
 # SOFT checks — suspicious but not impossible; down-weight, don't exclude
 # ---------------------------------------------------------------------------
+
+# Max months a skill could possibly have existed as of the pipeline run date.
+# Values derived from public GA / first-stable-release dates of each technology.
+# Keys are lowercase; matching is case-insensitive substring at runtime.
+_TECH_EXIST_LIMITS: dict[str, int] = {
+    # --- Original Stack & Variations ---
+    "langchain": 44,
+    "langgraph": 29,
+    "llamaindex": 43,
+    "llama-index": 43,
+    "qdrant": 63,
+    "pinecone": 65,
+    "milvus": 80,
+    "qlora": 37,
+    "q-lora": 37,
+    "bentoml": 86,
+    "vector search": 111,
+    "vector databases": 111,
+    "vector db": 111,
+    "huggingface transformers": 91,
+    "hf transformers": 91,
+    "transformers": 91,
+    "fine-tuning llms": 92,
+    "llm fine-tuning": 92,
+    "llm finetuning": 92,
+    "fine-tuning": 92,
+    "fine tuning": 92,
+    "diffusion models": 72,
+    "stable diffusion": 72,
+    "pgvector": 62,
+    "pg_vector": 62,
+    "peft": 65,
+    "weaviate": 77,
+    # --- LoRA & Prompt Engineering ---
+    "lora": 60,
+    "low-rank adaptation": 60,
+    "prompt engineering": 72,
+    "prompt design": 72,
+    # --- Popular AI/ML Stack ---
+    "pytorch": 117,
+    "tensorflow": 127,
+    "scikit-learn": 228,
+    "sklearn": 228,
+    "openai api": 72,
+    "openai": 72,
+    "chromadb": 40,
+    "chroma db": 40,
+    "chroma": 40,
+    "vllm": 36,
+    "ollama": 35,
+    "rag": 72,
+    "retrieval-augmented generation": 72,
+    "mlflow": 96,
+    "weights & biases": 100,
+    "weights and biases": 100,
+    "wandb": 100,
+    "w&b": 100,
+    "gradio": 85,
+    "streamlit": 80,
+    "fastapi": 90,
+}
+
+
+def _check_skill_duration_exceeds_tech_age(skills: list[dict]) -> list[str]:
+    """
+    Flags skills whose claimed duration_months exceeds the maximum months the
+    technology has existed. E.g. claiming 5 years of LangChain experience is
+    impossible — LangChain has only existed ~44 months.
+
+    Matching is case-insensitive substring: a skill name just needs to CONTAIN
+    the technology keyword. We use a 3-month tolerance for rounding/early-access.
+    Once a keyword matches, we stop checking further keywords for that skill to
+    avoid duplicate flags on the same entry.
+    """
+    reasons = []
+    for s in skills:
+        skill_name = (s.get("name") or "").lower()
+        skill_months = s.get("duration_months")
+        if skill_months is None:
+            continue
+
+        for tech_key, max_months in _TECH_EXIST_LIMITS.items():
+            if tech_key in skill_name and skill_months > max_months + 3:
+                reasons.append(
+                    f"skill '{s.get('name')}' claims {skill_months} months of experience "
+                    f"but '{tech_key}' has only existed ~{max_months} months"
+                )
+                break  # one flag per skill entry is enough
+    return reasons
 
 def _check_availability_contradiction(redrob_signals: dict) -> list[str]:
     if (
@@ -545,9 +620,24 @@ def _check_salary_anomaly(profile: dict, redrob_signals: dict) -> list[str]:
     return []
 
 
+def _check_experience_vs_career_history(profile: dict, career_history: list[dict]) -> list[str]:
+    """years_of_experience should be roughly >= the span implied by career
+    history (allowing gaps, so we only flag a LARGE mismatch, not a small one)."""
+    yoe = profile.get("years_of_experience")
+    total_months = sum(j.get("duration_months", 0) or 0 for j in career_history)
+    total_years = total_months / 12
+    if yoe is not None and total_years > yoe + 2:  # 2yr tolerance for overlap/rounding
+        return [f"career_history implies ~{total_years:.1f}yrs but "
+                f"years_of_experience claims only {yoe}"]
+    return []
+
+
 SOFT_CHECKS = [
-    ("availability_contradiction", lambda r: _check_availability_contradiction(r.get("redrob_signals", {}))),
-    ("salary_anomaly",             lambda r: _check_salary_anomaly(r.get("profile", {}), r.get("redrob_signals", {}))),
+    ("availability_contradiction",    lambda r: _check_availability_contradiction(r.get("redrob_signals", {}))),
+    ("salary_anomaly",                lambda r: _check_salary_anomaly(r.get("profile", {}), r.get("redrob_signals", {}))),
+    ("experience_mismatch",           lambda r: _check_experience_vs_career_history(
+                                          r.get("profile", {}), r.get("career_history", []))),
+    ("skill_duration_exceeds_tech_age", lambda r: _check_skill_duration_exceeds_tech_age(r.get("skills", []))),
 ]
 
 
