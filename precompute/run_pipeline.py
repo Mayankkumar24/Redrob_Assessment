@@ -119,6 +119,7 @@ def run_pipeline(
             "contradiction_flag": r["contradiction_flag"],
             "contradiction_reasons": "; ".join(r["contradiction_reasons"]) if r["contradiction_reasons"] else "",
             "skill_duration_penalty_score": r["skill_duration_penalty_score"],
+            "soft_contradiction_penalty_score": r["soft_contradiction_penalty_score"],
         }
         for cid, r in honeypot_results.items()
     ])

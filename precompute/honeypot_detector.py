@@ -607,6 +607,13 @@ def _violation_count_to_penalty(count: int) -> float:
     elif count == 2: return 0.35
     else:            return 0.55   # 3+
 
+def _soft_violation_count_to_penalty(count: int) -> float:
+    """Penalty based on how many soft checks (excl. skill_duration) triggered."""
+    if count == 0:   return 0.0
+    elif count == 1: return 0.1
+    elif count == 2: return 0.2
+    else:            return 0.4   # 3
+
 def _check_availability_contradiction(redrob_signals: dict) -> list[str]:
     if (
         redrob_signals.get("open_to_work_flag") is False
@@ -661,6 +668,13 @@ def evaluate_candidate(record: dict[str, Any]) -> dict:
     skill_violations = _check_skill_duration_exceeds_tech_age(record.get("skills", []))
     penalty = _violation_count_to_penalty(len(skill_violations))
 
+    soft_violation_count = sum([
+        bool(_check_availability_contradiction(record.get("redrob_signals", {}))),
+        bool(_check_salary_anomaly(record.get("profile", {}), record.get("redrob_signals", {}))),
+        bool(_check_experience_vs_career_history(record.get("profile", {}), record.get("career_history", []))),
+    ])
+    soft_penalty = _soft_violation_count_to_penalty(soft_violation_count)
+
     return {
         "candidate_id": record["candidate_id"],
         "honeypot_flag": len(hard_reasons) > 0,
@@ -668,6 +682,7 @@ def evaluate_candidate(record: dict[str, Any]) -> dict:
         "contradiction_flag": len(soft_reasons) > 0,
         "contradiction_reasons": soft_reasons,
         "skill_duration_penalty_score": penalty,
+        "soft_contradiction_penalty_score": soft_penalty,
     }
 
 
