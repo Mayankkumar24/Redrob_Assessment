@@ -599,6 +599,13 @@ def _check_skill_duration_exceeds_tech_age(skills: list[dict]) -> list[str]:
                 )
                 break  # one flag per skill entry is enough
     return reasons
+    
+def _violation_count_to_penalty(count: int) -> float:
+    """Graduated penalty based on number of skill-duration violations."""
+    if count == 0:   return 0.0
+    elif count == 1: return 0.15
+    elif count == 2: return 0.35
+    else:            return 0.55   # 3+
 
 def _check_availability_contradiction(redrob_signals: dict) -> list[str]:
     if (
@@ -641,6 +648,7 @@ SOFT_CHECKS = [
 ]
 
 
+# NAYA
 def evaluate_candidate(record: dict[str, Any]) -> dict:
     hard_reasons = []
     for _, check_fn in HARD_CHECKS:
@@ -650,12 +658,16 @@ def evaluate_candidate(record: dict[str, Any]) -> dict:
     for _, check_fn in SOFT_CHECKS:
         soft_reasons.extend(check_fn(record))
 
+    skill_violations = _check_skill_duration_exceeds_tech_age(record.get("skills", []))
+    penalty = _violation_count_to_penalty(len(skill_violations))
+
     return {
         "candidate_id": record["candidate_id"],
         "honeypot_flag": len(hard_reasons) > 0,
         "honeypot_reasons": hard_reasons,
         "contradiction_flag": len(soft_reasons) > 0,
         "contradiction_reasons": soft_reasons,
+        "skill_duration_penalty_score": penalty,
     }
 
 
