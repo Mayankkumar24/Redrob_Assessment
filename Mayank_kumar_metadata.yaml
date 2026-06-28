@@ -1,0 +1,100 @@
+# Redrob Hackathon — Submission Metadata Template
+#
+# Copy this file to your repo root as `submission_metadata.yaml` and fill it in.
+# The fields here should match what you submit via the portal at upload time.
+# Stage 3 review uses this file to verify your portal metadata.
+
+# ============================================================================
+# Team identity
+# ============================================================================
+team_name: "Mayank_kumar"  # Used in leaderboard and announcements
+
+primary_contact:
+  name: "Mayank kumar"
+  email: "Mayankkumar8469@gmail.com"   # Used for all organizer communication
+  phone: "+91-9528651707"        # Used for top-50 / top-10 outreach
+
+team_members:
+  - name: "Mayank kumar"
+    email: "Mayankkumar8469@gmail.com"
+    role: "Team Lead"          # Optional, e.g. "Team Lead", "Backend", "Data"
+  - 
+  # Add more members as needed; solo participants list just one member
+
+# ============================================================================
+# Code and reproducibility
+# ============================================================================
+github_repo: "https://github.com/Mayankkumar24/Redrob_Assessment"
+# Required. Must be reachable. Private repos OK if you can grant organizer
+# access at Stage 3 (the email to add will be communicated then).
+
+sandbox_link: "https://colab.research.google.com/github/Mayankkumar24/Redrob_Assessment/blob/main/sandbox.ipynb"
+# Required. A working hosted environment where the ranker can be run on a small
+# candidate sample. See Section 10.5 of submission_spec.md for acceptable
+# platforms (HuggingFace Spaces, Streamlit Cloud, Replit, Colab, Docker, Binder).
+
+reproduce_command: "python -m ranker.main --output submission.csv"
+# The single command that produces submission.csv from candidates.jsonl.
+# Should run end-to-end within 5 minutes on CPU with 16GB RAM and no network.
+
+# ============================================================================
+# Compute environment
+# ============================================================================
+compute:
+  platform: "Lenovo IdeaPad Slim 3"                    # Or: "AWS EC2 c5.4xlarge", "Local Linux box", etc.
+  cpu_cores: 2                                  # Number of CPU cores used
+  ram_gb: 8                                    # Available RAM in GB
+  python_version: "3.12.2"                      # python --version
+  os: "Windows 11"                              # Or "Ubuntu 22.04 LTS", etc.
+  uses_gpu_for_inference: false                 # Must be false — see compute constraints
+  has_network_during_ranking: false             # Must be false — no API calls during ranking
+  pre_computation_required: true              # true if you pre-compute embeddings or train models offline
+  pre_computation_time_minutes: 40               # Approximate, if applicable
+
+# ============================================================================
+# AI tools declaration
+# ============================================================================
+# Transparency only — declared use is NOT penalized. Be honest. Stage 5 interview
+# may verify these declarations against your code; declarations that contradict
+# your code or your interview are flagged.
+ai_tools_used:
+  - "Claude sonet 4.6"        # e.g. for architecture discussion, code review
+  - "Cursor"  # e.g. for autocomplete
+  # Other options: "ChatGPT", "Cursor", "Gemini", "Codeium", "Other", "None"
+
+ai_usage_summary: |
+  - "Used Claude for code review and architectural discussion. Used Cursor for autocomplete.
+     No candidate data was fed to any LLM."
+  - "Used Chatgpt for generating ppt as pdf format"
+
+# ============================================================================
+# Approach summary (optional but recommended)
+# ============================================================================
+methodology_summary: |
+  Hybrid ranker combining dense semantic retrieval with rule-based multi-component scoring. 
+  An offline precompute phase (Steps 1.1–1.7) ingests the 100K candidate pool, deduplicates 
+  embedding text, builds a FAISS IndexFlatIP over BAAI/bge-base-en-v1.5 embeddings, 
+  and precomputes disqualifier flags and honeypot detection. At runtime, the JD is 
+  embedded using the same model and used for FAISS top-1500 retrieval. Candidates are 
+  then scored across four components: semantic similarity (38%), hard-skill coverage against 
+  JD required/nice-to-have skills (30%), experience and seniority fit via a trapezoid function 
+  (17%), and a behavioral signal aggregate (15%). The 23 redrob_signals are bucketed into 
+  consistency, engagement, growth, integrity, and culture-fit, producing a multiplicative 
+  modifier in [0.55, 1.25] applied to the raw score. Hard honeypot filters exclude logically 
+  impossible profiles (expert skill with 0 months usage, impossible education dates, certs 
+  predating technology existence). Soft contradictions apply graduated score penalties 
+  rather than exclusion. Per-candidate reasoning is generated deterministically from matched 
+  skills, experience delta, and the strongest behavioral bucket. Runtime is well under 5 minutes 
+  on CPU for 100K candidates.
+
+
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true        # I have read submission_spec.md in full
+  code_is_original_work: true       # My code is my team's original work (using AI as a tool is fine)
+  no_collusion: true                # I have not coordinated my submission with other teams
+  honeypot_check_done: true        # OPTIONAL — set true if you explicitly checked for honeypots in your ranking
+  reproduction_tested: true         # I have tested that my reproduce_command runs end-to-end
