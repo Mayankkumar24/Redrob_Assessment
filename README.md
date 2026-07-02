@@ -183,84 +183,87 @@ redrob-ranker/
 
 ## ⚡ Quick Start — Run the Full Pipeline Here
 
+### Sandbox Link
+
 > **Open in Colab:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mayankkumar24/Redrob_Assessment/blob/main/sandbox.ipynb)
 
+### Reproduce csv file
 
-### Prerequisites
-
-Before you begin, make sure you have the following installed:
-
-- **Python 3.10+** (developed and tested on Python 3.12.2)
-- **Git LFS** — if not installed, run this command first:
-  ```bash
-  git lfs install
-  ```
-
----
-
-### Step 1 — Create a new folder
-
-Create a new folder on your machine where you want to set up the project.
-For example, name it `Simulate`.
-
----
-
-### Step 2 — Create a virtual environment
-
-Open the command prompt inside your new folder (`Simulate`) and run the following commands one by one:
-
-**Create the virtual environment:**
-```bash
-python -m venv .venv
-```
-
-**Activate the virtual environment:**
-```bash
-.venv\Scripts\Activate
-```
-
----
-
-### Step 3 — Clone the repository
-
-> This may take some time depending on your internet speed.
-
-```bash
-git clone https://github.com/Mayankkumar24/Redrob_Assessment.git
-```
-
-Then navigate into the cloned folder:
-```bash
-cd Redrob_Assessment
-```
-
----
-
-### Step 4 — Install dependencies
-
-> Do not interrupt execution even if it appears stuck — some packages take time to download.
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-### Step 5 — Run the ranker
-
-> This is the final command. It will complete in under 5 minutes.
-
-```bash
-python -m ranker.main --output Mayank_kumar_submission.csv
-```
-
----
-
-### Step 6 — Validate the output CSV
-
-```bash
-python validate_submission.py Mayank_kumar_submission.csv
-```
+> ### Prerequisites
+>
+> Before you begin, make sure you have the following installed:
+>
+> - **Python 3.10+** (developed and tested on Python 3.12.2)
+> - **Git LFS** — if not installed, run this command first:
+>   ```bash
+>   git lfs install
+>   ```
+>
+> ---
+>
+> ### Step 1 — Create a new folder
+>
+> Create a new folder on your machine where you want to set up the project.
+> For example, name it `Simulate`.
+>
+> ---
+>
+> ### Step 2 — Create a virtual environment
+>
+> Open the command prompt inside your new folder (`Simulate`) and run the following commands one by one:
+>
+> **Create the virtual environment:**
+> ```bash
+> python -m venv .venv
+> ```
+>
+> **Activate the virtual environment:**
+> ```bash
+> .venv\Scripts\Activate
+> ```
+>
+> ---
+>
+> ### Step 3 — Clone the repository
+>
+> > This may take some time depending on your internet speed.
+>
+> ```bash
+> git clone https://github.com/Mayankkumar24/Redrob_Assessment.git
+> ```
+>
+> Then navigate into the cloned folder:
+> ```bash
+> cd Redrob_Assessment
+> ```
+>
+> ---
+>
+> ### Step 4 — Install dependencies
+>
+> > Do not interrupt execution even if it appears stuck — some packages take time to download.
+>
+> ```bash
+> pip install -r requirements.txt
+> ```
+>
+> ---
+>
+> ### Step 5 — Run the ranker
+>
+> > This is the final command. It will complete in under 5 minutes.
+>
+> ```bash
+> python -m ranker.main --output Mayank_kumar_submission.csv
+> ```
+>
+> ---
+>
+> ### Step 6 — Validate the output CSV
+>
+> ```bash
+> python validate_submission.py Mayank_kumar_submission.csv
+> ```
 
 ---
 
