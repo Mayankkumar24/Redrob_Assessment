@@ -1,120 +1,135 @@
 """
 ranker/embed.py
 ───────────────
-Embed the job description (or any query text) using the same
-BAAI/bge-small-en-v1.5 model that was used in Phase 1.
+Two responsibilities in Phase 2:
 
-bge-small requires a query prefix for retrieval tasks:
-  "Represent this sentence for searching relevant passages: <text>"
+1. embed_jd()
+   Embeds the short JD text using BAAI/bge-base-en-v1.5 with BGE
+   query prefix. Returns unit-norm float32 vector (768-dim).
 
-We build the JD query string from jd_requirements.json so the
-embedding is dense with the right signals rather than raw Markdown noise.
+2. load_candidate_semantic_scores(top_170_ids)
+   Extracts embeddings ONLY for the top-170 candidate IDs from the
+   precomputed candidate_embeddings.npy (100K × 768) by looking up
+   their row indices in candidate_ids.npy.
+   Returns dict {candidate_id: cosine_similarity_with_JD}.
+
+Why extract subset:
+   Loading full 100K × 768 matrix (~300MB) just to use 170 rows
+   wastes RAM. We load the full array once, index into it, then
+   release. Cosine sim = dot product since both are L2-normalised.
 """
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import Any
-
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-from .config import EMBEDDING_MODEL, BGE_QUERY_PREFIX, PATHS
+from .config import EMBEDDING_MODEL, BGE_QUERY_PREFIX, JD_SHORT_TEXT, PATHS
 
 
-# ── Module-level model singleton (load once, reuse) ──────────────────────────
+# ── Module-level model singleton ──────────────────────────────────────────────
 _model: SentenceTransformer | None = None
 
 
 def get_model() -> SentenceTransformer:
     global _model
     if _model is None:
-        print(f"[embed] Loading {EMBEDDING_MODEL} …", flush=True)
+        print(f"[embed] Loading {EMBEDDING_MODEL} from local cache …", flush=True)
         _model = SentenceTransformer(EMBEDDING_MODEL)
     return _model
 
 
-def embed_jd(jd_req: dict[str, Any]) -> np.ndarray:
+# ── 1. JD embedding ───────────────────────────────────────────────────────────
+
+def embed_jd() -> np.ndarray:
     """
-    Build a rich query string from parsed JD requirements and embed it.
-
-    Returns a float32 unit-norm vector of shape (dim,).
-    Use with a FAISS IndexFlatIP for cosine similarity.
+    Embeds JD_SHORT_TEXT with BGE query prefix.
+    Returns float32 unit-norm vector shape (768,).
     """
-    query_text = _build_jd_query(jd_req)
-    print(f"[embed] JD query ({len(query_text)} chars):\n  {query_text[:200]}…", flush=True)
-
-    model = get_model()
-
-    # bge-small: add query prefix for asymmetric retrieval
-    prefixed = BGE_QUERY_PREFIX + query_text
-
-    vec = model.encode(
-        prefixed,
-        normalize_embeddings=True,   # unit norm → dot product = cosine sim
-        show_progress_bar=False,
+    model  = get_model()
+    text   = BGE_QUERY_PREFIX + JD_SHORT_TEXT
+    vec    = model.encode(
+        text,
+        normalize_embeddings=True,
         convert_to_numpy=True,
+        show_progress_bar=False,
     )
     return vec.astype(np.float32)
 
 
-def embed_texts(texts: list[str]) -> np.ndarray:
+# ── 2. Candidate semantic scores ──────────────────────────────────────────────
+
+def load_candidate_semantic_scores(
+    top_170_ids: list[str],
+    jd_vec: np.ndarray,
+    verbose: bool = True,
+) -> dict[str, float]:
     """
-    Batch-embed arbitrary texts (no query prefix).
-    Returns float32 array of shape (N, dim).
-    Used when Phase-1 stored raw text fields we need to compare at runtime.
+    Loads candidate_embeddings.npy and candidate_ids.npy,
+    extracts rows for top_170_ids, computes cosine similarity
+    with jd_vec (dot product, since both L2-normalised).
+
+    Returns {candidate_id: cosine_similarity} in [0, 1].
+    Cosine from dot product is in [-1, 1]; we shift to [0, 1].
     """
-    model = get_model()
-    vecs = model.encode(
-        texts,
-        normalize_embeddings=True,
-        show_progress_bar=len(texts) > 100,
-        batch_size=64,
-        convert_to_numpy=True,
-    )
-    return vecs.astype(np.float32)
+    emb_path = PATHS["candidate_emb"]
+    ids_path = PATHS["candidate_ids"]
 
+    if not emb_path.exists():
+        raise FileNotFoundError(f"Embeddings not found: {emb_path}")
+    if not ids_path.exists():
+        raise FileNotFoundError(f"Candidate IDs not found: {ids_path}")
 
-# ── Internal helpers ──────────────────────────────────────────────────────────
+    if verbose:
+        print("[embed] Loading candidate_ids.npy …", flush=True)
+    all_ids: np.ndarray = np.load(ids_path, allow_pickle=True)
 
-def _build_jd_query(jd_req: dict[str, Any]) -> str:
-    """
-    Flatten structured JD fields into a single retrieval-optimised string.
-    Emphasises hard requirements; de-emphasises nice-to-haves.
-    """
-    parts: list[str] = []
+    # Build id → row-index lookup
+    id_to_idx: dict[str, int] = {
+        str(cid): idx for idx, cid in enumerate(all_ids)
+    }
 
-    if title := jd_req.get("title"):
-        parts.append(f"Role: {title}.")
+    # Find indices for our top-170
+    indices: list[int] = []
+    found_ids: list[str] = []
+    missing: list[str] = []
 
-    if summary := jd_req.get("summary"):
-        parts.append(summary.strip())
+    for cid in top_170_ids:
+        idx = id_to_idx.get(str(cid))
+        if idx is not None:
+            indices.append(idx)
+            found_ids.append(cid)
+        else:
+            missing.append(cid)
 
-    # Hard-required skills (repeated twice for emphasis)
-    req_skills = jd_req.get("required_skills", [])
-    if req_skills:
-        skill_str = ", ".join(req_skills)
-        parts.append(f"Required skills: {skill_str}.")
-        parts.append(f"Must have: {skill_str}.")   # repetition boosts similarity
+    if missing:
+        print(f"[embed] WARNING: {len(missing)} IDs not found in candidate_ids.npy", flush=True)
 
-    # Nice-to-have (once only)
-    nice = jd_req.get("nice_to_have_skills", [])
-    if nice:
-        parts.append(f"Preferred: {', '.join(nice)}.")
+    if verbose:
+        print(f"[embed] Loading embeddings for {len(indices)} candidates …", flush=True)
 
-    # Experience level
-    if min_exp := jd_req.get("min_experience_years"):
-        parts.append(f"Minimum {min_exp} years of experience required.")
+    # Load full matrix and extract subset
+    # np.load with mmap_mode='r' avoids loading full 300MB into RAM at once
+    all_emb = np.load(emb_path, mmap_mode="r")
+    subset  = all_emb[indices].astype(np.float32)   # shape (len(indices), 768)
 
-    if seniority := jd_req.get("seniority_level"):
-        parts.append(f"Seniority: {seniority}.")
+    # Cosine similarity = dot product (both L2-normalised)
+    raw_sims: np.ndarray = subset @ jd_vec           # shape (len(indices),)
 
-    # Domain / industry context
-    if domain := jd_req.get("domain"):
-        parts.append(f"Domain: {domain}.")
+    # Shift [-1, 1] → [0, 1]
+    sims_01 = (raw_sims + 1.0) / 2.0
 
-    if responsibilities := jd_req.get("key_responsibilities"):
-        parts.append("Responsibilities: " + " ".join(responsibilities))
+    scores = {
+        cid: float(sim)
+        for cid, sim in zip(found_ids, sims_01)
+    }
 
-    return " ".join(parts)
+    if verbose:
+        print(
+            f"[embed] Semantic scores — "
+            f"min={min(scores.values()):.4f}  "
+            f"max={max(scores.values()):.4f}",
+            flush=True,
+        )
+
+    return scores
