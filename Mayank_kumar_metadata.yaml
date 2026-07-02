@@ -76,11 +76,12 @@ methodology_summary: |
   embedding text, builds a FAISS IndexFlatIP over BAAI/bge-base-en-v1.5 embeddings, 
   and precomputes disqualifier flags and honeypot detection. At runtime, the JD is 
   embedded using the same model and used for FAISS top-1500 retrieval. Candidates are 
-  then scored across four components: semantic similarity (38%), hard-skill coverage against 
-  JD required/nice-to-have skills (30%), experience and seniority fit via a trapezoid function 
-  (17%), and a behavioral signal aggregate (15%). The 23 redrob_signals are bucketed into 
-  consistency, engagement, growth, integrity, and culture-fit, producing a multiplicative 
-  modifier in [0.55, 1.25] applied to the raw score. Hard honeypot filters exclude logically 
+  then scored across three components: production experience score — pre-computed via anchor-based 
+  embedding diff (35%), semantic similarity with the JD embedding (35%), and hard-skill coverage 
+  against JD required/nice-to-have skills (30%). Eight redrob_signals (skill assessment scores, 
+  GitHub activity, recruiter response rate, open-to-work flag, profile staleness, interview 
+  completion rate, avg response time, and verification trust) produce a multiplicative 
+  modifier in [0.55, 1.30] applied to the raw score. Hard honeypot filters exclude logically 
   impossible profiles (expert skill with 0 months usage, impossible education dates, certs 
   predating technology existence). Soft contradictions apply graduated score penalties 
   rather than exclusion. Per-candidate reasoning is generated deterministically from matched 
