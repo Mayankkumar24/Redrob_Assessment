@@ -11,8 +11,8 @@ Two-phase AI pipeline that ranks 100,000 candidates against a Senior AI Engineer
 - [Approach](#approach)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
-- [Setup](#setup -Most important)
-- [Reproducing the Submission](#reproducing-the-submission)
+- [⚡ Quick Start — Run the Full Pipeline Here](#-quick-start--run-the-full-pipeline-here)
+- [Reproducing the Submission](#Explanation)
 - [Phase 1 — Precompute Pipeline](#phase-1--precompute-pipeline-offline)
 - [Phase 2 — Ranker](#phase-2--ranker-runtime)
 - [Scoring Design](#scoring-design)
@@ -181,7 +181,10 @@ redrob-ranker/
 
 ---
 
-## Setup
+## ⚡ Quick Start — Run the Full Pipeline Here
+
+> **Open in Colab:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mayankkumar24/Redrob_Assessment/blob/main/sandbox.ipynb)
+
 
 ### Prerequisites
 
@@ -256,7 +259,7 @@ python -m ranker.main --output Mayank_kumar_submission.csv
 ### Step 6 — Validate the output CSV
 
 ```bash
-python validate_submission.py mere_submission.csv
+python validate_submission.py Mayank_kumar_submission.csv
 ```
 
 ---
